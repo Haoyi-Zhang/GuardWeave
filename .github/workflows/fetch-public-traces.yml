@@ -1,0 +1,47 @@
+name: fetch-public-traces
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch fixed Mahimahi trace inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          COMMIT=f1346c38c415abfc98626dd82450f49a57033603
+          BASE="https://raw.githubusercontent.com/ravinet/mahimahi/${COMMIT}"
+          mkdir -p payload/traces
+          files=(
+            LICENSE
+            traces/README
+            traces/Verizon-LTE-short.down
+            traces/TMobile-LTE-short.down
+            traces/ATT-LTE-driving-2016.down
+            traces/TMobile-UMTS-driving.down
+          )
+          for rel in "${files[@]}"; do
+            mkdir -p "payload/$(dirname "$rel")"
+            curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+              "${BASE}/${rel}" -o "payload/${rel}"
+          done
+          (
+            cd payload
+            sha256sum LICENSE traces/README traces/*.down > SHA256SUMS
+            printf 'source_repository=ravinet/mahimahi\nsource_commit=%s\n' "$COMMIT" > SOURCE.txt
+          )
+      - name: Upload fixed trace bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mahimahi-fixed-traces
+          path: payload
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 6
