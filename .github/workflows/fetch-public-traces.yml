@@ -22,7 +22,7 @@ jobs:
           BASE="https://raw.githubusercontent.com/ravinet/mahimahi/${COMMIT}"
           mkdir -p payload/traces
           files=(
-            LICENSE
+            COPYING
             traces/README
             traces/Verizon-LTE-short.down
             traces/TMobile-LTE-short.down
@@ -36,7 +36,7 @@ jobs:
           done
           (
             cd payload
-            sha256sum LICENSE traces/README traces/*.down > SHA256SUMS
+            sha256sum COPYING traces/README traces/*.down > SHA256SUMS
             printf 'source_repository=ravinet/mahimahi\nsource_commit=%s\n' "$COMMIT" > SOURCE.txt
           )
       - name: Upload fixed trace bundle
